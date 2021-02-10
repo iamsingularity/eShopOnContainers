@@ -1,19 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Identity.API.Models.ManageViewModels
+namespace Microsoft.eShopOnContainers.Services.Identity.API.Models.ManageViewModels
 {
-    public class VerifyPhoneNumberViewModel
+    public record VerifyPhoneNumberViewModel
     {
         [Required]
-        public string Code { get; set; }
+        public string Code { get; init; }
 
         [Required]
         [Phone]
         [Display(Name = "Phone number")]
-        public string PhoneNumber { get; set; }
+        public string PhoneNumber { get; init; }
     }
 }

@@ -1,16 +1,12 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
+﻿using IdentityServer4.Models;
 using System.Collections.Generic;
 using System.Linq;
-using IdentityServer4.Models;
 
-namespace Identity.API.Models.AccountViewModels
+namespace Microsoft.eShopOnContainers.Services.Identity.API.Models.AccountViewModels
 {
-    public class ConsentViewModel : ConsentInputModel
+    public record ConsentViewModel : ConsentInputModel
     {
-        public ConsentViewModel(ConsentInputModel model, string returnUrl, AuthorizationRequest request, Client client, IEnumerable<Scope> scopes)
+        public ConsentViewModel(ConsentInputModel model, string returnUrl, AuthorizationRequest request, Client client, Resources resources)
         {
             RememberConsent = model?.RememberConsent ?? true;
             ScopesConsented = model?.ScopesConsented ?? Enumerable.Empty<string>();
@@ -22,20 +18,20 @@ namespace Identity.API.Models.AccountViewModels
             ClientLogoUrl = client.LogoUri;
             AllowRememberConsent = client.AllowRememberConsent;
 
-            IdentityScopes = scopes.Where(x => x.Type == ScopeType.Identity).Select(x => new ScopeViewModel(x, ScopesConsented.Contains(x.Name) || model == null)).ToArray();
-            ResourceScopes = scopes.Where(x => x.Type == ScopeType.Resource).Select(x => new ScopeViewModel(x, ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+            IdentityScopes = resources.IdentityResources.Select(x => new ScopeViewModel(x, ScopesConsented.Contains(x.Name) || model == null)).ToArray();
+            ResourceScopes = resources.ApiResources.SelectMany(x => x.Scopes).Select(x => new ScopeViewModel(x, ScopesConsented.Contains(x.Name) || model == null)).ToArray();
         }
 
-        public string ClientName { get; set; }
-        public string ClientUrl { get; set; }
-        public string ClientLogoUrl { get; set; }
-        public bool AllowRememberConsent { get; set; }
+        public string ClientName { get; init; }
+        public string ClientUrl { get; init; }
+        public string ClientLogoUrl { get; init; }
+        public bool AllowRememberConsent { get; init; }
 
-        public IEnumerable<ScopeViewModel> IdentityScopes { get; set; }
-        public IEnumerable<ScopeViewModel> ResourceScopes { get; set; }
+        public IEnumerable<ScopeViewModel> IdentityScopes { get; init; }
+        public IEnumerable<ScopeViewModel> ResourceScopes { get; init; }
     }
 
-    public class ScopeViewModel
+    public record ScopeViewModel
     {
         public ScopeViewModel(Scope scope, bool check)
         {
@@ -47,11 +43,21 @@ namespace Identity.API.Models.AccountViewModels
             Checked = check || scope.Required;
         }
 
-        public string Name { get; set; }
-        public string DisplayName { get; set; }
-        public string Description { get; set; }
-        public bool Emphasize { get; set; }
-        public bool Required { get; set; }
-        public bool Checked { get; set; }
+        public ScopeViewModel(IdentityResource identity, bool check)
+        {
+            Name = identity.Name;
+            DisplayName = identity.DisplayName;
+            Description = identity.Description;
+            Emphasize = identity.Emphasize;
+            Required = identity.Required;
+            Checked = check || identity.Required;
+        }
+
+        public string Name { get; init; }
+        public string DisplayName { get; init; }
+        public string Description { get; init; }
+        public bool Emphasize { get; init; }
+        public bool Required { get; init; }
+        public bool Checked { get; init; }
     }
 }

@@ -1,5 +1,6 @@
 import { Component, OnInit }    from '@angular/core';
-import { Subscription }         from 'rxjs/Subscription';
+import { Observable, Subscription } from 'rxjs';
+import { catchError }           from 'rxjs/operators';
 
 import { CatalogService }       from './catalog.service';
 import { ConfigurationService } from '../shared/services/configuration.service';
@@ -25,6 +26,7 @@ export class CatalogComponent implements OnInit {
     paginationInfo: IPager;
     authenticated: boolean = false;
     authSubscription: Subscription;
+    errorReceived: boolean;
 
     constructor(private service: CatalogService, private basketService: BasketWrapperService, private configurationService: ConfigurationService, private securityService: SecurityService) {
         this.authenticated = securityService.IsAuthorized;
@@ -54,6 +56,9 @@ export class CatalogComponent implements OnInit {
 
     onFilterApplied(event: any) {
         event.preventDefault();
+        
+        this.brandSelected = this.brandSelected && this.brandSelected.toString() != "null" ? this.brandSelected : null;
+        this.typeSelected = this.typeSelected && this.typeSelected.toString() != "null" ? this.typeSelected : null;
         this.getCatalog(this.paginationInfo.itemsPage, this.paginationInfo.actualPage, this.brandSelected, this.typeSelected);
     }
 
@@ -79,17 +84,19 @@ export class CatalogComponent implements OnInit {
     }
 
     getCatalog(pageSize: number, pageIndex: number, brand?: number, type?: number) {
-        this.service.getCatalog(pageIndex, pageSize, brand, type).subscribe(catalog => {
-            this.catalog = catalog;
+        this.errorReceived = false;
 
-            this.paginationInfo = {
-                actualPage : catalog.pageIndex,
-                itemsPage : catalog.pageSize,
-                totalItems : catalog.count,
-                totalPages: Math.ceil(catalog.count / catalog.pageSize),
-                items: catalog.pageSize
-            };
-
+        this.service.getCatalog(pageIndex, pageSize, brand, type)
+            .pipe(catchError((err) => this.handleError(err)))
+            .subscribe(catalog => {
+                this.catalog = catalog;
+                this.paginationInfo = {
+                    actualPage : catalog.pageIndex,
+                    itemsPage : catalog.pageSize,
+                    totalItems : catalog.count,
+                    totalPages: Math.ceil(catalog.count / catalog.pageSize),
+                    items: catalog.pageSize
+                };
         });
     }
 
@@ -107,6 +114,11 @@ export class CatalogComponent implements OnInit {
             let allBrands = { id: null, brand: 'All' };
             this.brands.unshift(allBrands);
         });
+    }
+
+    private handleError(error: any) {
+        this.errorReceived = true;
+        return Observable.throw(error);
     }
 }
 

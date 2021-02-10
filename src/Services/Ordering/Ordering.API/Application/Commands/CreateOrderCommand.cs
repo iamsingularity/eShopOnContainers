@@ -1,8 +1,9 @@
-﻿using System;
-using MediatR;
+﻿using MediatR;
+using Ordering.API.Application.Models;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
-using System.Collections;
 
 namespace Microsoft.eShopOnContainers.Services.Ordering.API.Application.Commands
 {
@@ -13,14 +14,20 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API.Application.Commands
     // http://cqrs.nu/Faq
     // https://docs.spine3.org/motivation/immutability.html 
     // http://blog.gauffin.org/2012/06/griffin-container-introducing-command-support/
-    // https://msdn.microsoft.com/en-us/library/bb383979.aspx
+    // https://docs.microsoft.com/dotnet/csharp/programming-guide/classes-and-structs/how-to-implement-a-lightweight-class-with-auto-implemented-properties
 
     [DataContract]
     public class CreateOrderCommand
-        :IAsyncRequest<bool>
+        : IRequest<bool>
     {
         [DataMember]
         private readonly List<OrderItemDTO> _orderItems;
+
+        [DataMember]
+        public string UserId { get; private set; }
+
+        [DataMember]
+        public string UserName { get; private set; }
 
         [DataMember]
         public string City { get; private set; }
@@ -53,28 +60,20 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API.Application.Commands
         public int CardTypeId { get; private set; }
 
         [DataMember]
-        public int PaymentId { get; private set; }
-
-        [DataMember]
-        public int BuyerId { get; private set; }
-
-        [DataMember]
         public IEnumerable<OrderItemDTO> OrderItems => _orderItems;
-
-        public void AddOrderItem(OrderItemDTO item)
-        {
-            _orderItems.Add(item);
-        }
 
         public CreateOrderCommand()
         {
             _orderItems = new List<OrderItemDTO>();
         }
 
-        public CreateOrderCommand(string city, string street, string state, string country, string zipcode,
+        public CreateOrderCommand(List<BasketItem> basketItems, string userId, string userName, string city, string street, string state, string country, string zipcode,
             string cardNumber, string cardHolderName, DateTime cardExpiration,
-            string cardSecurityNumber, int cardTypeId, int paymentId, int buyerId) : this()
+            string cardSecurityNumber, int cardTypeId) : this()
         {
+            _orderItems = basketItems.ToOrderItemsDTO().ToList();
+            UserId = userId;
+            UserName = userName;
             City = city;
             Street = street;
             State = state;
@@ -86,23 +85,22 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.API.Application.Commands
             CardSecurityNumber = cardSecurityNumber;
             CardTypeId = cardTypeId;
             CardExpiration = cardExpiration;
-            PaymentId = paymentId;
-            BuyerId = buyerId;
         }
 
-        public class OrderItemDTO
+
+        public record OrderItemDTO
         {
-            public int ProductId { get; set; }
+            public int ProductId { get; init; }
 
-            public string ProductName { get; set; }
+            public string ProductName { get; init; }
 
-            public decimal UnitPrice { get; set; }
+            public decimal UnitPrice { get; init; }
 
-            public decimal Discount { get; set; }
+            public decimal Discount { get; init; }
 
-            public int Units { get; set; }
+            public int Units { get; init; }
 
-            public string PictureUrl { get; set; }
+            public string PictureUrl { get; init; }
         }
     }
 }

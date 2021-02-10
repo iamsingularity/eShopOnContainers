@@ -1,13 +1,9 @@
-﻿// Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
-// Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
-namespace Identity.API.Models.AccountViewModels
+﻿namespace Microsoft.eShopOnContainers.Services.Identity.API.Models.AccountViewModels
 {
-    public class LoggedOutViewModel
+    public record LoggedOutViewModel
     {
-        public string PostLogoutRedirectUri { get; set; }
-        public string ClientName { get; set; }
-        public string SignOutIframeUrl { get; set; }
+        public string PostLogoutRedirectUri { get; init; }
+        public string ClientName { get; init; }
+        public string SignOutIframeUrl { get; init; }
     }
 }

@@ -10,8 +10,8 @@ namespace Microsoft.eShopOnContainers.Services.Ordering.Domain.AggregatesModel.O
     {
         Order Add(Order order);
 
-        Task<Order> GetAsync(int orderId);
-
         void Update(Order order);
+
+        Task<Order> GetAsync(int orderId);
     }
 }
